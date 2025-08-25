@@ -23,9 +23,6 @@ This project is a conversational agent for patient registration, built with Next
 ## Environment Variables
 - Store sensitive keys in `.env` (excluded from git)
 
-## API
-- Patient details are posted to: `https://deployment.tekclansolutions.com:8443/prweb/api/Users/v1/CreatePatient`
-
 ## Accessibility
 - All form controls have accessible labels
 - UI is keyboard and screen reader friendly
