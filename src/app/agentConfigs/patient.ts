@@ -1,4 +1,5 @@
 import { RealtimeAgent, tool } from '@openai/agents/realtime';
+import { PatientValidationSchema } from '../validation/patientValidation';
 
 // ---- Interfaces ----
 interface PatientInformation {
@@ -185,6 +186,31 @@ If patient asks why info is needed → explain simply and reassure confidentiali
       },
       execute: async (input: unknown) => {
         const data = input as FullPatientData;
+console.log(data,'Received patient data to save:', JSON.stringify(data, null, 2));
+        // Client-side validation before API call
+        const validationResult = PatientValidationSchema.safeParse({
+          firstName: data.PatientInformation.FirstName,
+          lastName: data.PatientInformation.LastName,
+          phone: data.PatientInformation.PhoneNumber,
+          email: data.PatientInformation.EmailID,
+          ssn: data.PatientInformation.SSN,
+          dob: data.PatientInformation.DateOfBirth,
+          zip: data.Address.ZipCode,
+          state: data.Address.State,
+          country: data.Address.Country
+        });
+        console.log('Validation result:', validationResult);
+        if (!validationResult.success) {
+          const errors = validationResult.error.errors.map(err =>
+            `${err.path.join('.')}: ${err.message}`
+          ).join(', ');
+          return {
+            success: false,
+            error: `Validation failed: ${errors}`,
+            disconnect: false,
+            message: `I'm sorry, but there are some issues with the information provided: ${errors}. Could you please provide the correct information?`
+          };
+        }
 
         try {
           console.log('Saving patient data:', JSON.stringify(data, null, 2));
