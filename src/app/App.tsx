@@ -416,7 +416,7 @@ function App() {
   const agentSetKey = searchParams.get("agentConfig") || "default";
 
   const login = ()=>{
-    if(username?.toLowerCase() === "admin" && password === "tekclan@123"){
+    if(username?.toLowerCase() === "admin" && password === "tek^77&Km4"){
       setIsLoggedIn(true);
     }else{
       alert("Invalid credentials");
