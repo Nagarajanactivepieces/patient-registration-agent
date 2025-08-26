@@ -26,7 +26,10 @@ import { useHandleSessionHistory } from "./hooks/useHandleSessionHistory";
 
 function App() {
   const searchParams = useSearchParams()!;
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   // ------------------------------------------------------------------------
   // Codec selector – lets you toggle between wide-band Opus (48 kHz)
   // and narrow-band PCMU/PCMA (8 kHz) to hear what the agent sounds like on
@@ -138,7 +141,7 @@ function App() {
 
   useEffect(() => {
     if (selectedAgentName && sessionStatus === "DISCONNECTED") {
-      connectToRealtime();
+      // connectToRealtime();
     }
   }, [selectedAgentName]);
 
@@ -243,12 +246,12 @@ function App() {
     const turnDetection = isPTTActive
       ? null
       : {
-          type: 'server_vad',
-          threshold: 0.9,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 500,
-          create_response: true,
-        };
+        type: 'server_vad',
+        threshold: 0.9,
+        prefix_padding_ms: 300,
+        silence_duration_ms: 500,
+        create_response: true,
+      };
 
     sendEvent({
       type: 'session.update',
@@ -412,72 +415,201 @@ function App() {
 
   const agentSetKey = searchParams.get("agentConfig") || "default";
 
+  const login = ()=>{
+    if(username?.toLowerCase() === "admin" && password === "tekclan@123"){
+      setIsLoggedIn(true);
+    }else{
+      alert("Invalid credentials");
+    }
+  }
+
   return (
-    <div className="h-screen flex flex-col">
-      <div className="bg-white border-b px-4 py-2 flex items-center justify-between">
-        <button
-          className="text-xl font-bold cursor-pointer hover:text-blue-600"
-          onClick={() => window.location.reload()}
-        >
-          🏥 Patient Registration Agent
-        </button>
-        
-{/* Scenario dropdown FIXED */}
-<div className="flex items-center space-x-2">
-  <label htmlFor="scenario-select" className="text-sm font-medium">
-    Scenario
-  </label>
-  <select
-    id="scenario-select"   // ✅ linked with label
-    title="Select scenario" // ✅ fallback for accessibility
-    value={agentSetKey}
-    onChange={handleAgentChange}
-    className="border rounded px-2 py-1 text-sm"
-  >
-    {Object.keys(allAgentSets).map((agentKey) => (
-      <option key={agentKey} value={agentKey}>
-        {agentKey}
-      </option>
-    ))}
-  </select>
-</div>
+    <React.Fragment>
+      {!isLoggedIn ?
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+                <span className="text-2xl text-white">🏥</span>
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Sign in to Continue
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Please enter your credentials
+              </p>
+            </div>
 
-      </div>
+            {/* Card */}
+            <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-100">
+              <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                {/* Username */}
+                <div>
+                  <label
+                    htmlFor="username"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Username
+                  </label>
+                  <input
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    type="text"
+                    placeholder="Enter your username"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  />
+                </div>
 
-      <div className="flex-1 flex" style={{height:"89vh",overflowY:"hidden"}}>
-        <div className="flex-1">
-          <Transcript
-            userText={userText}
-            setUserText={setUserText}
-            onSendMessage={handleSendTextMessage}
-            canSend={sessionStatus === "CONNECTED"}
-            downloadRecording={downloadRecording}
+                {/* Password */}
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((s) => !s)}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M3 3l18 18M10.58 10.58a3 3 0 004.24 4.24M9.88 4.12A9.94 9.94 0 0121 12c-.56.97-1.27 1.87-2.1 2.67m-3.56 2.31A9.93 9.93 0 0112 21C6.48 21 2 16.52 2 11a9.94 9.94 0 013.34-7.42"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition"
+                  onClick={login}
+                >
+                  Sign In
+                </button>
+              </form>
+
+              {/* Footer note */}
+              {/* <div className="mt-6 text-center">
+                <p className="text-xs text-gray-500">
+                  🔒 UI-only demo. No credentials are sent.
+                </p>
+              </div> */}
+            </div>
+          </div>
+        </div>
+        :
+        <div className="h-screen flex flex-col">
+          <div className="bg-white border-b px-4 py-2 flex items-center justify-between">
+            <button
+              className="text-xl font-bold cursor-pointer hover:text-blue-600"
+              onClick={() => window.location.reload()}
+            >
+              🏥 Patient Registration Agent
+            </button>
+
+            {/* Scenario dropdown FIXED */}
+            <div className="flex items-center space-x-2">
+              <label htmlFor="scenario-select" className="text-sm font-medium">
+                Scenario
+              </label>
+              <select
+                id="scenario-select"   // ✅ linked with label
+                title="Select scenario" // ✅ fallback for accessibility
+                value={agentSetKey}
+                onChange={handleAgentChange}
+                className="border rounded px-2 py-1 text-sm"
+              >
+                {Object.keys(allAgentSets).map((agentKey) => (
+                  <option key={agentKey} value={agentKey}>
+                    {agentKey}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+          </div>
+
+          <div className="flex-1 flex" style={{ height: "89vh", overflowY: "hidden" }}>
+            <div className="flex-1">
+              <Transcript
+                userText={userText}
+                setUserText={setUserText}
+                onSendMessage={handleSendTextMessage}
+                canSend={sessionStatus === "CONNECTED"}
+                downloadRecording={downloadRecording}
+              />
+            </div>
+
+            {isEventsPaneExpanded && (
+              <div className="w-80 border-l bg-gray-50">
+                <Events isExpanded={isEventsPaneExpanded} />
+              </div>
+            )}
+          </div>
+
+          <BottomToolbar
+            sessionStatus={sessionStatus}
+            onToggleConnection={onToggleConnection}
+            isPTTActive={isPTTActive}
+            setIsPTTActive={setIsPTTActive}
+            isPTTUserSpeaking={isPTTUserSpeaking}
+            handleTalkButtonDown={handleTalkButtonDown}
+            handleTalkButtonUp={handleTalkButtonUp}
+            isEventsPaneExpanded={isEventsPaneExpanded}
+            setIsEventsPaneExpanded={setIsEventsPaneExpanded}
+            isAudioPlaybackEnabled={isAudioPlaybackEnabled}
+            setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
+            codec={urlCodec}
+            onCodecChange={handleCodecChange}
           />
         </div>
-        
-        {isEventsPaneExpanded && (
-          <div className="w-80 border-l bg-gray-50">
-            <Events isExpanded={isEventsPaneExpanded} />
-          </div>
-        )}
-      </div>
-
-      <BottomToolbar
-        sessionStatus={sessionStatus}
-        onToggleConnection={onToggleConnection}
-        isPTTActive={isPTTActive}
-        setIsPTTActive={setIsPTTActive}
-        isPTTUserSpeaking={isPTTUserSpeaking}
-        handleTalkButtonDown={handleTalkButtonDown}
-        handleTalkButtonUp={handleTalkButtonUp}
-        isEventsPaneExpanded={isEventsPaneExpanded}
-        setIsEventsPaneExpanded={setIsEventsPaneExpanded}
-        isAudioPlaybackEnabled={isAudioPlaybackEnabled}
-        setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
-        codec={urlCodec}
-        onCodecChange={handleCodecChange}
-      />
-    </div>
+      }
+    </React.Fragment>
   );
 }
 
