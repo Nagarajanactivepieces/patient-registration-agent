@@ -6,25 +6,49 @@ const nameRegex = /^[A-Za-z .'-]{2,50}$/;
 const emailRegex = /^[\w-.]+@[\w-]+\.[a-zA-Z]{2,}$/;
 const ssnRegex = /^(\d{3}-\d{2}-\d{4}|\d{9})$/;
 // const ssnRegex = /^(?!666|000|9\d{2})\d{3}(?!00)\d{2}(?!0{4})\d{4}$/;
-const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
-const zipRegex = /^\d{5}(-\d{4})?$/;
-const stateRegex = /^(?:A[LKZR]|C[AOT]|D[EC]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[EDAINSOT]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])$/;
+const dateRegex = /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|\d|3[1])$/;
+// const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+const zipRegex = /^\d{4,10}$/;
+// const zipRegex = /^\d{5}(-\d{4})?$/;
+const stateRegex = /^[A-Za-z .'-]{2,50}$/;
+// const stateRegex = /^(?:A[LKZR]|C[AOT]|D[EC]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[EDAINSOT]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])$/;
 
+function validateDOB(input:any) {
+  const m = dateRegex.exec(input);
+  if (!m) return false;
 
+  const [_, y, mo, d] = m;
+  const year = +y, month = +mo, day = +d;
+
+  // 2) Build a Date and verify it matches (catches invalids like 2021-02-30)
+  const dt = new Date(year, month - 1, day);
+  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return false;
+
+  // 3) Range: today - 100 years <= dt <= today (no future)
+  const today = new Date();
+  const min = new Date(today);
+  min.setFullYear(today.getFullYear() - 100);
+
+  // Normalize times (optional)
+  dt.setHours(0,0,0,0); today.setHours(0,0,0,0); min.setHours(0,0,0,0);
+
+  // return dt >= min && dt <= today;
+  return { valid: true}
+}
 // Using libphonenumber-js
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
 
 export function validateAndFormatPhone(raw: string, country?: string) {
   // country like 'US', 'IN', 'GB'; omit if raw has +country code
-//   const phone = parsePhoneNumberFromString(raw, country as any)
-//   if (!phone) return { valid: false, error: 'Not a number' }
+  // const phone = parsePhoneNumberFromString(raw, country as any)
+  // if (!phone) return { valid: false, error: 'Not a number' }
 
-//   // Library checks both “possible” and “valid” patterns per region
-//   if (!phone.isPossible()) return { valid: false, error: 'Number not possible' }
-//   if (!phone.isValid()) return { valid: false, error: 'Number not valid' }
+  // // Library checks both “possible” and “valid” patterns per region
+  // if (!phone.isPossible()) return { valid: false, error: 'Number not possible' }
+  // if (!phone.isValid()) return { valid: false, error: 'Number not valid' }
 
-//   // Canonical E.164 for storage
-//   const e164 = phone.number // same as phone.format('E.164')
+  // // Canonical E.164 for storage
+  // const e164 = phone.number // same as phone.format('E.164')
   return { valid: true}
 }
 // Zod schema
@@ -40,7 +64,8 @@ export const PatientValidationSchema = z.object({
   country: z.string().min(2, 'Country is required.'),
   // Add other fields as needed
 }).refine((data) => {
-    const isValid = validateAndFormatPhone(data.phone, data.country.toUpperCase())
+    // const isValid = validateAndFormatPhone(data.phone, data.country.toUpperCase())
+    const isValid = validateDOB(data.dob);
   // Country-specific phone validation
 //   if (data.country.toUpperCase() === 'US') {
 //     return phoneRegex.test(data.phone);
@@ -55,7 +80,7 @@ export const PatientValidationSchema = z.object({
 //   }
 //   // Default: allow 6-15 digits for other countries
 //   return /^\d{6,15}$/.test(data.phone);
-return isValid?.valid
+return typeof isValid === 'object' && isValid !== null && isValid.valid === true;
 }, {
   message: 'Phone number format is invalid for the selected country.',
   path: ['phone']
